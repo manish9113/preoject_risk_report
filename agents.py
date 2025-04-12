@@ -107,7 +107,7 @@ def initialize_crew() -> Crew:
             reporting_agent
         ],
         tasks=[],  # Tasks will be added dynamically based on user queries
-        verbose=2,
+        verbose=True,
         process=Process.sequential  # Agents will work sequentially
     )
     
