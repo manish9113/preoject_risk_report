@@ -1,20 +1,21 @@
 import os
 from crewai import Agent, Crew, Task, Process
-from langchain_openai import ChatOpenAI
-from config import OPENAI_MODEL_NAME
+from config import LLM_TYPE, OLLAMA_MODEL, OLLAMA_BASE_URL
 import json
 from typing import List, Dict, Any, Optional
 
 # Initialize the LLM
 def get_llm():
-    """Initialize and return the language model."""
-    # The newest OpenAI model is "gpt-4o" which was released May 13, 2024.
-    # Do not change this unless explicitly requested by the user
-    return ChatOpenAI(
-        model=OPENAI_MODEL_NAME,
+    """Initialize and return the language model using Ollama."""
+    from langchain_community.llms import Ollama
+    
+    # Configure Ollama LLM
+    llm = Ollama(
+        model=OLLAMA_MODEL,
         temperature=0.2,
-        api_key=os.getenv("OPENAI_API_KEY")
+        base_url=OLLAMA_BASE_URL
     )
+    return llm
 
 # Define the agents
 def create_project_risk_manager(llm) -> Agent:

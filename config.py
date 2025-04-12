@@ -1,10 +1,9 @@
 import os
 
-# OpenAI Configuration
-# the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
-# do not change this unless explicitly requested by the user
-OPENAI_MODEL_NAME = "gpt-4o"
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# LLM Configuration
+LLM_TYPE = "ollama"  # "ollama" instead of "openai"
+OLLAMA_MODEL = "llama3"  # or another model you prefer to use
+OLLAMA_BASE_URL = "http://localhost:11434"
 
 # Vector Database Configuration
 VECTOR_DB_TYPE = "chromadb"  # "chromadb" or "pinecone"

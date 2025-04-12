@@ -364,8 +364,8 @@ def store_risk_data_in_vector_db(risks: List[Dict[str, Any]]) -> bool:
             # In a real implementation, you would use an embedding model here
             # For demo purposes, we'll use a simplified approach
             vectors = []
-            from langchain_openai import OpenAIEmbeddings
-            embeddings = OpenAIEmbeddings()
+            from langchain_community.embeddings import OllamaEmbeddings
+            embeddings = OllamaEmbeddings(model=OLLAMA_MODEL)
             
             for risk in risks:
                 risk_text = f"{risk.get('title', '')} {risk.get('description', '')}"
@@ -436,8 +436,8 @@ def query_risks_from_vector_db(query: str, project: str = None, limit: int = 10)
             index = vector_db["index"]
             
             # Generate query embedding
-            from langchain_openai import OpenAIEmbeddings
-            embeddings = OpenAIEmbeddings()
+            from langchain_community.embeddings import OllamaEmbeddings
+            embeddings = OllamaEmbeddings(model=OLLAMA_MODEL)
             query_embedding = embeddings.embed_query(query)
             
             # Prepare filter if project is specified
