@@ -1,78 +1,62 @@
 import os
-from enum import Enum
 
-# OpenAI API Configuration
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+# OpenAI Configuration
+# the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
+# do not change this unless explicitly requested by the user
+OPENAI_MODEL_NAME = "gpt-4o"
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Vector Database Configuration
-# Choose between ChromaDB or Pinecone
-USE_PINECONE = False  # Set to True to use Pinecone instead of ChromaDB
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY", "")
-PINECONE_ENVIRONMENT = os.getenv("PINECONE_ENVIRONMENT", "")
+VECTOR_DB_TYPE = "chromadb"  # "chromadb" or "pinecone"
+CHROMA_PERSIST_DIRECTORY = "chroma_db"
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+PINECONE_ENVIRONMENT = os.getenv("PINECONE_ENVIRONMENT", "us-west1-gcp")
 PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "project-risks")
-CHROMA_PERSIST_DIRECTORY = "./chroma_db"
 
-# Agent Configuration
-DEFAULT_MODEL = "gpt-4o"  # the newest OpenAI model is "gpt-4o" which was released May 13, 2024
-MARKET_ANALYSIS_MODEL = "gpt-4o"
-RISK_SCORING_MODEL = "gpt-4o"
-PROJECT_TRACKING_MODEL = "gpt-4o"
-REPORTING_MODEL = "gpt-4o"
+# Application Configuration
+APP_NAME = "AI Project Risk Management System"
+APP_VERSION = "1.0.0"
+DEBUG_MODE = os.getenv("DEBUG_MODE", "False").lower() == "true"
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
-# LLM Configuration
-TEMPERATURE = 0.2
-MAX_TOKENS = 1500
-
-# Project Risk Thresholds
-class RiskLevel(Enum):
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-    CRITICAL = "critical"
-
-RISK_SCORE_THRESHOLDS = {
-    RiskLevel.LOW: 25,
-    RiskLevel.MEDIUM: 50,
-    RiskLevel.HIGH: 75,
-    RiskLevel.CRITICAL: 90,
-}
-
-# Risk Categories
+# Risk Categories and Levels
 RISK_CATEGORIES = [
-    "Financial",
     "Resource",
     "Schedule",
+    "Budget",
     "Technical",
-    "Operational",
-    "Market",
-    "Customer",
+    "Quality",
+    "Scope",
+    "Communication",
+    "External",
+    "Vendor",
     "Regulatory",
-    "Strategic"
+    "Market",
+    "Security"
 ]
 
-# Risk Impact Weights (out of 100)
-RISK_IMPACT_WEIGHTS = {
-    "Financial": 25,
-    "Resource": 20,
-    "Schedule": 15,
-    "Technical": 15,
-    "Operational": 10,
-    "Market": 5,
-    "Customer": 5,
-    "Regulatory": 3,
-    "Strategic": 2
+RISK_LEVELS = {
+    "Low": {"color": "#26eb77", "threshold": 30},
+    "Medium": {"color": "#f0cc45", "threshold": 70},
+    "High": {"color": "#eb4034", "threshold": 100}
 }
 
-# External Data Sources
-EXTERNAL_DATA_SOURCES = [
-    {"name": "Financial News API", "url": "https://api.financialnews.com"},
-    {"name": "Market Trends API", "url": "https://api.markettrends.io"},
-    {"name": "Economic Indicators API", "url": "https://api.economicindicators.org"}
+# Sample Projects
+DEFAULT_PROJECTS = [
+    "Cloud Migration",
+    "Mobile App Development",
+    "ERP Implementation",
+    "E-commerce Platform",
+    "Data Warehouse Project"
 ]
 
-# Refresh Rate (in seconds)
-DATA_REFRESH_RATE = 3600  # Refresh external data every hour
-RISK_ASSESSMENT_REFRESH_RATE = 86400  # Reassess project risks daily
+# Chat Configuration
+MAX_CHAT_HISTORY = 50
+CHAT_SAVE_PATH = "chat_history.json"
 
-# Cache TTL (in seconds)
-CACHE_TTL = 3600  # Cache data for one hour
+# Agent System Configuration
+AGENT_TEMPERATURE = 0.2
+AGENT_PROCESS = "sequential"  # "sequential" or "parallel"
+
+# Data Refresh Configuration
+DATA_REFRESH_INTERVAL = 3600  # in seconds (1 hour)

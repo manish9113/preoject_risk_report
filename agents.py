@@ -1,175 +1,191 @@
-import logging
-from typing import Dict, List, Any
+import os
+from crewai import Agent, Crew, Task, Process
+from langchain_openai import ChatOpenAI
+from config import OPENAI_MODEL_NAME
+import json
+from typing import List, Dict, Any, Optional
 
-from crewai import Agent
-from langchain.chat_models import ChatOpenAI
+# Initialize the LLM
+def get_llm():
+    """Initialize and return the language model."""
+    # The newest OpenAI model is "gpt-4o" which was released May 13, 2024.
+    # Do not change this unless explicitly requested by the user
+    return ChatOpenAI(
+        model=OPENAI_MODEL_NAME,
+        temperature=0.2,
+        api_key=os.getenv("OPENAI_API_KEY")
+    )
 
-from config import (
-    OPENAI_API_KEY,
-    DEFAULT_MODEL,
-    MARKET_ANALYSIS_MODEL,
-    RISK_SCORING_MODEL,
-    PROJECT_TRACKING_MODEL,
-    REPORTING_MODEL,
-    TEMPERATURE
-)
-from tools import (
-    langchain_tools,
-    tools_dict
-)
+# Define the agents
+def create_project_risk_manager(llm) -> Agent:
+    """Create the Project Risk Manager agent."""
+    return Agent(
+        role="Project Risk Manager",
+        goal="Coordinate risk analysis and mitigation efforts across all agents to provide comprehensive project risk assessments",
+        backstory="""You are an experienced project risk manager with expertise in IT projects. 
+        Your responsibility is to coordinate the analysis from different specialized agents, 
+        integrate their findings, and provide holistic risk assessments and mitigation strategies.
+        You understand how different risk factors interact and can prioritize risks based on their 
+        potential impact on project success.""",
+        verbose=True,
+        llm=llm,
+        allow_delegation=True
+    )
 
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
+def create_market_analysis_agent(llm) -> Agent:
+    """Create the Market Analysis Agent."""
+    return Agent(
+        role="Market Analysis Agent",
+        goal="Analyze financial trends, market conditions, and news to identify external risks to IT projects",
+        backstory="""You are a market analysis expert who specializes in identifying how 
+        external market conditions can impact IT projects. You track industry trends, 
+        competitor activities, economic indicators, and relevant news to detect potential 
+        risks before they materialize. Your insights help teams prepare for market-driven challenges.""",
+        verbose=True,
+        llm=llm
+    )
 
-# Initialize LLM models
-default_llm = ChatOpenAI(
-    openai_api_key=OPENAI_API_KEY,
-    temperature=TEMPERATURE,
-    model_name=DEFAULT_MODEL
-)
+def create_risk_scoring_agent(llm) -> Agent:
+    """Create the Risk Scoring Agent."""
+    return Agent(
+        role="Risk Scoring Agent",
+        goal="Quantify and prioritize identified risks based on their probability and potential impact",
+        backstory="""You are a risk assessment specialist with a background in statistical 
+        analysis and risk modeling. You can evaluate both qualitative and quantitative data 
+        to determine the severity of risks, their likelihood of occurrence, and their potential 
+        impact on project outcomes. Your expertise helps teams focus on the most critical risks first.""",
+        verbose=True,
+        llm=llm
+    )
 
-market_analysis_llm = ChatOpenAI(
-    openai_api_key=OPENAI_API_KEY,
-    temperature=TEMPERATURE,
-    model_name=MARKET_ANALYSIS_MODEL
-)
+def create_project_status_tracking_agent(llm) -> Agent:
+    """Create the Project Status Tracking Agent."""
+    return Agent(
+        role="Project Status Tracking Agent",
+        goal="Monitor internal project parameters and identify potential risks related to resources, schedules, and deliverables",
+        backstory="""You are a project tracking expert who monitors the internal health of 
+        IT projects. You analyze resource allocation, schedule adherence, budget consumption, 
+        deliverable quality, and team dynamics to identify potential risks that could derail 
+        project success. You are particularly adept at detecting early warning signs of project issues.""",
+        verbose=True,
+        llm=llm
+    )
 
-risk_scoring_llm = ChatOpenAI(
-    openai_api_key=OPENAI_API_KEY,
-    temperature=TEMPERATURE,
-    model_name=RISK_SCORING_MODEL
-)
+def create_reporting_agent(llm) -> Agent:
+    """Create the Reporting Agent."""
+    return Agent(
+        role="Reporting Agent",
+        goal="Generate comprehensive risk reports and alerts for decision-makers",
+        backstory="""You are a communication specialist who excels at transforming complex 
+        risk data into clear, actionable reports. You know how to prioritize information for 
+        different stakeholders, highlight critical issues, and present mitigation options in 
+        an accessible format. You ensure that decision-makers have the right information at 
+        the right time to address project risks effectively.""",
+        verbose=True,
+        llm=llm
+    )
 
-project_tracking_llm = ChatOpenAI(
-    openai_api_key=OPENAI_API_KEY,
-    temperature=TEMPERATURE,
-    model_name=PROJECT_TRACKING_MODEL
-)
+# Initialize the crew with all agents
+def initialize_crew() -> Crew:
+    """Initialize and return the crew with all agents."""
+    llm = get_llm()
+    
+    # Create all agents
+    project_risk_manager = create_project_risk_manager(llm)
+    market_analysis_agent = create_market_analysis_agent(llm)
+    risk_scoring_agent = create_risk_scoring_agent(llm)
+    project_status_tracking_agent = create_project_status_tracking_agent(llm)
+    reporting_agent = create_reporting_agent(llm)
+    
+    # Create a crew with all agents
+    crew = Crew(
+        agents=[
+            project_risk_manager,
+            market_analysis_agent,
+            risk_scoring_agent,
+            project_status_tracking_agent,
+            reporting_agent
+        ],
+        tasks=[],  # Tasks will be added dynamically based on user queries
+        verbose=2,
+        process=Process.sequential  # Agents will work sequentially
+    )
+    
+    return crew
 
-reporting_llm = ChatOpenAI(
-    openai_api_key=OPENAI_API_KEY,
-    temperature=TEMPERATURE,
-    model_name=REPORTING_MODEL
-)
-
-# Create the Project Risk Manager agent
-project_risk_manager = Agent(
-    role="Project Risk Manager",
-    goal="Identify, assess, and coordinate mitigation of all project risks",
-    backstory="""
-    You are a senior project risk manager with extensive experience in IT projects.
-    Your expertise lies in identifying risks across multiple dimensions, assessing their 
-    potential impact, and coordinating mitigation strategies. You have a holistic view 
-    of projects and can integrate insights from various sources to create a comprehensive 
-    risk management approach.
-    """,
-    verbose=True,
-    llm=default_llm,
-    tools=langchain_tools,
-    allow_delegation=True
-)
-
-# Create the Market Analysis Agent
-market_analysis_agent = Agent(
-    role="Market Analysis Agent",
-    goal="Analyze financial trends, market news, and economic indicators to identify external risks",
-    backstory="""
-    You are a market analysis specialist with deep knowledge of financial markets, 
-    economic trends, and industry dynamics. You excel at identifying external factors 
-    that could impact IT projects, such as market shifts, regulatory changes, and 
-    economic conditions. Your analysis helps anticipate external risks before they 
-    affect project outcomes.
-    """,
-    verbose=True,
-    llm=market_analysis_llm,
-    tools=[
-        tools_dict["fetch_market_news_tool"],
-        tools_dict["market_data_tool"],
-        tools_dict["identify_external_risks_tool"]
-    ],
-    allow_delegation=False
-)
-
-# Create the Risk Scoring Agent
-risk_scoring_agent = Agent(
-    role="Risk Scoring Agent",
-    goal="Evaluate and score identified risks based on probability, impact, and interdependencies",
-    backstory="""
-    You are a risk assessment expert specializing in quantitative risk analysis. 
-    Your methodical approach to evaluating risk probability and impact enables 
-    accurate risk scoring and prioritization. You can identify risk interdependencies 
-    and calculate cumulative effects to determine overall project risk levels.
-    """,
-    verbose=True,
-    llm=risk_scoring_llm,
-    tools=[
-        tools_dict["calculate_risk_score_tool"],
-        tools_dict["project_risks_tool"],
-        tools_dict["add_risk_tool"],
-        tools_dict["update_risk_tool"]
-    ],
-    allow_delegation=False
-)
-
-# Create the Project Status Tracking Agent
-project_status_agent = Agent(
-    role="Project Status Tracking Agent",
-    goal="Monitor project progress and identify internal risks related to resources, schedules, and technical aspects",
-    backstory="""
-    You are a project status tracking specialist with a keen eye for early warning 
-    signs in IT projects. You can identify resource constraints, schedule slippages, 
-    and technical hurdles before they escalate into major issues. Your focus is on 
-    internal project dynamics and operational challenges that could introduce risks.
-    """,
-    verbose=True,
-    llm=project_tracking_llm,
-    tools=[
-        tools_dict["project_info_tool"],
-        tools_dict["analyze_project_health_tool"],
-        tools_dict["analyze_risk_trends_tool"]
-    ],
-    allow_delegation=False
-)
-
-# Create the Reporting Agent
-reporting_agent = Agent(
-    role="Reporting Agent",
-    goal="Generate detailed risk analytics, alerts, and reports for stakeholders",
-    backstory="""
-    You are a risk reporting specialist with expertise in translating complex risk 
-    data into clear, actionable insights. You excel at creating comprehensive risk 
-    reports that highlight critical issues, track risk trends, and provide mitigation 
-    recommendations. Your reports enable informed decision-making by presenting risk 
-    information in an accessible, prioritized format.
-    """,
-    verbose=True,
-    llm=reporting_llm,
-    tools=[
-        tools_dict["generate_risk_report_tool"],
-        tools_dict["get_project_reports_tool"],
-        tools_dict["generate_mitigation_strategies_tool"]
-    ],
-    allow_delegation=False
-)
-
-# Create a dictionary of all agents
-agents_dict = {
-    "risk_manager": project_risk_manager,
-    "market_analyst": market_analysis_agent,
-    "risk_scorer": risk_scoring_agent,
-    "project_tracker": project_status_agent,
-    "reporting_agent": reporting_agent
-}
-
-# Create a list of all agents
-agents_list = [
-    project_risk_manager,
-    market_analysis_agent,
-    risk_scoring_agent,
-    project_status_agent,
-    reporting_agent
-]
+# Function to get project risk assessment based on user query
+def get_project_risk_assessment(crew: Crew, user_query: str, selected_project: str) -> str:
+    """
+    Get a project risk assessment based on the user's query.
+    
+    Args:
+        crew: The initialized crew of agents
+        user_query: The user's question or request
+        selected_project: The currently selected project or "All Projects"
+        
+    Returns:
+        A response string with the risk assessment
+    """
+    from tasks import (
+        create_analyze_market_conditions_task,
+        create_assess_project_status_task,
+        create_generate_risk_assessment_task,
+        create_score_project_risks_task,
+        create_generate_risk_report_task
+    )
+    
+    # Clear any existing tasks
+    crew.tasks = []
+    
+    # Create the market analysis task
+    market_analysis_task = create_analyze_market_conditions_task(
+        crew.agents[1],  # Market Analysis Agent
+        user_query,
+        selected_project
+    )
+    
+    # Create the project status tracking task
+    project_status_task = create_assess_project_status_task(
+        crew.agents[3],  # Project Status Tracking Agent
+        user_query,
+        selected_project
+    )
+    
+    # Create the risk scoring task
+    risk_scoring_task = create_score_project_risks_task(
+        crew.agents[2],  # Risk Scoring Agent
+        user_query,
+        selected_project,
+        [market_analysis_task, project_status_task]
+    )
+    
+    # Create the risk assessment task
+    risk_assessment_task = create_generate_risk_assessment_task(
+        crew.agents[0],  # Project Risk Manager
+        user_query,
+        selected_project,
+        [market_analysis_task, project_status_task, risk_scoring_task]
+    )
+    
+    # Create the reporting task
+    reporting_task = create_generate_risk_report_task(
+        crew.agents[4],  # Reporting Agent
+        user_query,
+        selected_project,
+        [risk_assessment_task]
+    )
+    
+    # Add all tasks to the crew
+    crew.tasks = [
+        market_analysis_task,
+        project_status_task,
+        risk_scoring_task,
+        risk_assessment_task,
+        reporting_task
+    ]
+    
+    # Execute the tasks and get the result
+    result = crew.kickoff()
+    
+    # Return the final report from the reporting agent
+    return result

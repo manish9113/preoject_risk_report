@@ -1,342 +1,114 @@
 import json
-import logging
-import time
-from datetime import datetime
-from typing import Dict, List, Any, Optional
-
+import os
+from datetime import datetime, timedelta
+from typing import List, Dict, Any, Optional
 import pandas as pd
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+from config import CHAT_SAVE_PATH, RISK_LEVELS
 
-import config
+def format_chat_history(chat_history: List[Dict[str, str]]) -> str:
+    """Format chat history into a string representation."""
+    formatted = ""
+    for message in chat_history:
+        role = message["role"]
+        content = message["content"]
+        formatted += f"{role.upper()}: {content}\n\n"
+    return formatted
 
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
+def save_chat_history(chat_history: List[Dict[str, str]]) -> None:
+    """Save chat history to a file."""
+    try:
+        with open(CHAT_SAVE_PATH, 'w') as f:
+            json.dump(chat_history, f)
+    except Exception as e:
+        print(f"Error saving chat history: {str(e)}")
 
-def setup_cache():
-    """Initialize a simple cache for storing temporary data."""
-    return {
-        "last_update": {},
-        "data": {},
-    }
-
-# Global cache
-cache = setup_cache()
-
-def get_cached_data(key: str, ttl: int = config.CACHE_TTL) -> Optional[Any]:
-    """
-    Get data from the cache if it exists and is not expired.
+def load_chat_history() -> List[Dict[str, str]]:
+    """Load chat history from a file if it exists, otherwise return an empty list."""
+    try:
+        if os.path.exists(CHAT_SAVE_PATH):
+            with open(CHAT_SAVE_PATH, 'r') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"Error loading chat history: {str(e)}")
     
-    Args:
-        key: The cache key
-        ttl: Time to live in seconds
-        
-    Returns:
-        The cached data or None if not found or expired
-    """
-    if key not in cache["data"] or key not in cache["last_update"]:
-        return None
-        
-    last_update = cache["last_update"][key]
-    if time.time() - last_update > ttl:
-        return None
-        
-    return cache["data"][key]
+    # Return welcome message if chat history doesn't exist or there's an error
+    return [
+        {
+            "role": "assistant",
+            "content": """
+            👋 Welcome to the AI Project Risk Management System! I can help you identify, 
+            assess, and mitigate risks across your IT projects. You can ask me about specific 
+            projects, compare risk profiles between projects, or get recommendations for 
+            risk mitigation strategies. How can I assist you today?
+            """
+        }
+    ]
 
-def set_cached_data(key: str, data: Any) -> None:
-    """
-    Store data in the cache.
-    
-    Args:
-        key: The cache key
-        data: The data to cache
-    """
-    cache["data"][key] = data
-    cache["last_update"][key] = time.time()
+def risk_level_from_score(score: float) -> str:
+    """Convert a numerical risk score to a risk level string."""
+    for level, data in RISK_LEVELS.items():
+        if score <= data["threshold"]:
+            return level
+    return "High"  # Default to high if score exceeds all thresholds
 
-def format_timestamp(timestamp: float = None) -> str:
-    """
-    Format a timestamp as a human-readable string.
+def date_range(days_back: int) -> List[datetime]:
+    """Generate a list of dates going back a specified number of days."""
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=days_back)
     
-    Args:
-        timestamp: Unix timestamp (default: current time)
-        
-    Returns:
-        Formatted timestamp string
-    """
-    if timestamp is None:
-        timestamp = time.time()
-    return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+    date_list = []
+    current_date = start_date
+    
+    while current_date <= end_date:
+        date_list.append(current_date)
+        current_date += timedelta(days=1)
+    
+    return date_list
 
-def calculate_risk_score(risks: List[Dict]) -> int:
-    """
-    Calculate an overall risk score based on a list of risks.
-    
-    Args:
-        risks: List of risk dictionaries with 'probability' and 'impact' keys
-        
-    Returns:
-        Overall risk score (0-100)
-    """
+def format_timestamp(dt: datetime) -> str:
+    """Format a datetime object into a human-readable string."""
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+def generate_risk_report_summary(project_name: str, risks: List[Dict[str, Any]]) -> str:
+    """Generate a summary of the risk report for a project."""
     if not risks:
-        return 0
-        
-    total_score = 0
-    for risk in risks:
-        # Convert probability and impact to 0-1 scale if they aren't already
-        probability = risk.get("probability", 0)
-        if probability > 1:
-            probability = probability / 100
-            
-        impact = risk.get("impact", 0)
-        if impact > 1:
-            impact = impact / 100
-            
-        # Calculate individual risk score (0-100)
-        risk_score = probability * impact * 100
-        
-        # Apply category weight if available
-        category = risk.get("category", "")
-        weight = config.RISK_IMPACT_WEIGHTS.get(category, 1) / 100
-        weighted_score = risk_score * weight
-        
-        total_score += weighted_score
+        return "No risks found matching the current filters."
     
-    # Normalize the total score to be between 0 and 100
-    return min(100, round(total_score))
-
-def get_risk_level(score: int) -> config.RiskLevel:
-    """
-    Determine the risk level based on the risk score.
+    # Count risks by level
+    high_risks = len([r for r in risks if r["level"] == "High"])
+    medium_risks = len([r for r in risks if r["level"] == "Medium"])
+    low_risks = len([r for r in risks if r["level"] == "Low"])
     
-    Args:
-        score: Risk score (0-100)
-        
-    Returns:
-        Risk level enum
-    """
-    if score <= config.RISK_SCORE_THRESHOLDS[config.RiskLevel.LOW]:
-        return config.RiskLevel.LOW
-    elif score <= config.RISK_SCORE_THRESHOLDS[config.RiskLevel.MEDIUM]:
-        return config.RiskLevel.MEDIUM
-    elif score <= config.RISK_SCORE_THRESHOLDS[config.RiskLevel.HIGH]:
-        return config.RiskLevel.HIGH
-    else:
-        return config.RiskLevel.CRITICAL
-
-def create_risk_heatmap(risks: List[Dict]) -> go.Figure:
-    """
-    Create a risk heatmap visualization.
-    
-    Args:
-        risks: List of risk dictionaries with 'name', 'probability', and 'impact' keys
-        
-    Returns:
-        Plotly figure object
-    """
-    if not risks:
-        return go.Figure()
-    
-    # Extract data
-    names = [risk.get("name", f"Risk {i+1}") for i, risk in enumerate(risks)]
-    probabilities = [risk.get("probability", 0) for risk in risks]
-    impacts = [risk.get("impact", 0) for risk in risks]
-    categories = [risk.get("category", "Unknown") for risk in risks]
-    
-    # Create DataFrame for plotting
-    df = pd.DataFrame({
-        "Risk": names,
-        "Probability": probabilities,
-        "Impact": impacts,
-        "Category": categories
-    })
-    
-    # Create the heatmap
-    fig = px.scatter(
-        df,
-        x="Impact",
-        y="Probability",
-        text="Risk",
-        color="Category",
-        size=[1] * len(df),  # Uniform size
-        hover_name="Risk",
-        title="Project Risk Heatmap",
-    )
-    
-    # Add reference lines for risk levels
-    fig.add_shape(
-        type="rect",
-        x0=0, y0=0, x1=0.5, y1=0.5,
-        fillcolor="green", opacity=0.2, layer="below", line_width=0
-    )
-    fig.add_shape(
-        type="rect",
-        x0=0.5, y0=0, x1=1, y1=0.5,
-        fillcolor="yellow", opacity=0.2, layer="below", line_width=0
-    )
-    fig.add_shape(
-        type="rect",
-        x0=0, y0=0.5, x1=0.5, y1=1,
-        fillcolor="yellow", opacity=0.2, layer="below", line_width=0
-    )
-    fig.add_shape(
-        type="rect",
-        x0=0.5, y0=0.5, x1=1, y1=1,
-        fillcolor="red", opacity=0.2, layer="below", line_width=0
-    )
-    
-    # Update layout
-    fig.update_layout(
-        xaxis_title="Impact",
-        yaxis_title="Probability",
-        xaxis=dict(range=[0, 1], tickformat=".0%"),
-        yaxis=dict(range=[0, 1], tickformat=".0%"),
-    )
-    
-    return fig
-
-def create_risk_trend_chart(risk_history: List[Dict]) -> go.Figure:
-    """
-    Create a risk trend chart showing how risk scores have changed over time.
-    
-    Args:
-        risk_history: List of dictionaries with 'date' and 'score' keys
-        
-    Returns:
-        Plotly figure object
-    """
-    if not risk_history:
-        return go.Figure()
-    
-    # Create DataFrame
-    df = pd.DataFrame(risk_history)
-    
-    # Convert date strings to datetime objects if needed
-    if df['date'].dtype == 'object':
-        df['date'] = pd.to_datetime(df['date'])
-    
-    # Sort by date
-    df = df.sort_values('date')
-    
-    # Create figure
-    fig = px.line(
-        df,
-        x='date',
-        y='score',
-        title='Project Risk Score Trend',
-        markers=True,
-    )
-    
-    # Add risk level reference lines
-    for level in config.RiskLevel:
-        threshold = config.RISK_SCORE_THRESHOLDS.get(level, 0)
-        fig.add_hline(
-            y=threshold,
-            line_dash="dash",
-            line_color="gray",
-            annotation_text=f"{level.value.capitalize()} Risk",
-            annotation_position="bottom right"
-        )
-    
-    # Update layout
-    fig.update_layout(
-        xaxis_title="Date",
-        yaxis_title="Risk Score",
-        yaxis=dict(range=[0, 100]),
-    )
-    
-    return fig
-
-def format_risk_report(project_name: str, risks: List[Dict], overall_score: int) -> str:
-    """
-    Format a risk report as a markdown string.
-    
-    Args:
-        project_name: Name of the project
-        risks: List of risk dictionaries
-        overall_score: Overall risk score
-        
-    Returns:
-        Markdown formatted report
-    """
-    risk_level = get_risk_level(overall_score)
-    
-    # Start with the header
-    report = f"# Risk Report: {project_name}\n\n"
-    report += f"**Overall Risk Score:** {overall_score}/100 ({risk_level.value.upper()})\n\n"
-    report += f"**Report Generated:** {format_timestamp()}\n\n"
-    
-    # Add summary of risks by category
-    report += "## Risk Summary by Category\n\n"
-    
-    # Group risks by category
+    # Get categories with highest risk count
     categories = {}
     for risk in risks:
-        category = risk.get("category", "Uncategorized")
-        if category not in categories:
-            categories[category] = []
-        categories[category].append(risk)
-    
-    # Create a table for each category
-    for category, category_risks in categories.items():
-        report += f"### {category}\n\n"
-        report += "| Risk | Probability | Impact | Score | Status |\n"
-        report += "|------|------------|--------|-------|--------|\n"
-        
-        for risk in category_risks:
-            name = risk.get("name", "Unnamed Risk")
-            probability = risk.get("probability", 0)
-            impact = risk.get("impact", 0)
-            score = round(probability * impact * 100)
-            status = risk.get("status", "Active")
-            
-            report += f"| {name} | {probability:.0%} | {impact:.0%} | {score} | {status} |\n"
-        
-        report += "\n"
-    
-    # Add mitigation strategies section
-    report += "## Mitigation Strategies\n\n"
-    
-    # List mitigation strategies for high and critical risks
-    high_risks = [r for r in risks if r.get("probability", 0) * r.get("impact", 0) > 0.5]
-    
-    if high_risks:
-        for risk in high_risks:
-            name = risk.get("name", "Unnamed Risk")
-            mitigation = risk.get("mitigation", "No mitigation strategy provided.")
-            report += f"### {name}\n\n"
-            report += f"{mitigation}\n\n"
-    else:
-        report += "No high-priority risks requiring immediate mitigation.\n\n"
-    
-    return report
-
-def json_to_df(json_data: str) -> pd.DataFrame:
-    """
-    Convert JSON string to pandas DataFrame.
-    
-    Args:
-        json_data: JSON string
-        
-    Returns:
-        Pandas DataFrame
-    """
-    try:
-        data = json.loads(json_data)
-        if isinstance(data, list):
-            return pd.DataFrame(data)
-        elif isinstance(data, dict):
-            return pd.DataFrame([data])
+        category = risk["category"]
+        if category in categories:
+            categories[category] += 1
         else:
-            logger.error(f"Unexpected JSON structure: {type(data)}")
-            return pd.DataFrame()
-    except json.JSONDecodeError as e:
-        logger.error(f"Failed to parse JSON: {e}")
-        return pd.DataFrame()
+            categories[category] = 1
+    
+    sorted_categories = sorted(categories.items(), key=lambda x: x[1], reverse=True)
+    top_categories = sorted_categories[:3] if len(sorted_categories) >= 3 else sorted_categories
+    
+    # Generate summary
+    summary = f"## Risk Summary for {project_name}\n\n"
+    summary += f"**Total Risks:** {len(risks)}\n\n"
+    summary += f"**Risk Breakdown:**\n"
+    summary += f"- High: {high_risks}\n"
+    summary += f"- Medium: {medium_risks}\n"
+    summary += f"- Low: {low_risks}\n\n"
+    
+    summary += f"**Top Risk Categories:**\n"
+    for category, count in top_categories:
+        summary += f"- {category}: {count} risks\n"
+    
+    summary += f"\n**Critical Attention Required:**\n"
+    if high_risks > 0:
+        critical_risks = [r for r in risks if r["level"] == "High"]
+        for i, risk in enumerate(critical_risks[:3]):
+            summary += f"{i + 1}. **{risk['title']}** - {risk['description'][:100]}...\n"
+    else:
+        summary += "No high-level risks identified at this time.\n"
+    
+    return summary
