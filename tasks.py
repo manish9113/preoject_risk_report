@@ -34,7 +34,14 @@ def create_analyze_market_conditions_task(agent, user_query: str, project: str) 
         - Regulatory and compliance considerations
         - Technology evolution risks
         """,
-        context=[{"role": "user", "content": context}]
+        context=[
+            {
+                "role": "user", 
+                "content": context,
+                "description": "User query context", 
+                "expected_output": "Analysis of market conditions affecting project risks"
+            }
+        ]
     )
 
 # Project Status Tracking Task
@@ -69,7 +76,14 @@ def create_assess_project_status_task(agent, user_query: str, project: str) -> T
         - Quality and deliverable risks
         - Team and communication risks
         """,
-        context=[{"role": "user", "content": context}]
+        context=[
+            {
+                "role": "user", 
+                "content": context,
+                "description": "User query context about project status", 
+                "expected_output": "Assessment of internal project risks"
+            }
+        ]
     )
 
 # Risk Scoring Task
@@ -102,7 +116,14 @@ def create_score_project_risks_task(agent, user_query: str, project: str, depend
         - Risk categorization by type and urgency
         - Controllability assessment for each risk
         """,
-        context=[{"role": "user", "content": context}],
+        context=[
+            {
+                "role": "user", 
+                "content": context,
+                "description": "User query context about risk prioritization", 
+                "expected_output": "Quantitative risk assessment with priorities"
+            }
+        ],
         dependencies=dependencies
     )
 
@@ -137,7 +158,14 @@ def create_generate_risk_assessment_task(agent, user_query: str, project: str, d
         - Contingency plans for unavoidable risks
         - Overall project risk level assessment
         """,
-        context=[{"role": "user", "content": context}],
+        context=[
+            {
+                "role": "user", 
+                "content": context,
+                "description": "User query context for risk assessment", 
+                "expected_output": "Comprehensive risk assessment with mitigation strategies"
+            }
+        ],
         dependencies=dependencies
     )
 
@@ -172,6 +200,13 @@ def create_generate_risk_report_task(agent, user_query: str, project: str, depen
         - Offer clear recommendations for action
         - Be conversational yet informative in tone
         """,
-        context=[{"role": "user", "content": context}],
+        context=[
+            {
+                "role": "user", 
+                "content": context,
+                "description": "User query about project risks that needs a response", 
+                "expected_output": "Comprehensive and conversational risk assessment report"
+            }
+        ],
         dependencies=dependencies
     )
