@@ -130,7 +130,7 @@ with tab1:
             title="Overall Risk Score Trend",
             labels={"date": "Date", "risk_score": "Risk Score"}
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="trend_chart")
         
         # Risk distribution chart
         st.subheader("Risk Distribution by Category")

@@ -283,7 +283,11 @@ def initialize_vector_db():
     if VECTOR_DB_TYPE == "chromadb":
         try:
             import chromadb
-            client = chromadb.PersistentClient(path=CHROMA_PERSIST_DIRECTORY)
+            from chromadb.config import Settings
+            
+            # Use in-memory client instead of persistent to avoid tenant issues
+            client = chromadb.Client(Settings(is_persistent=False))
+            
             # Create collections if they don't exist
             try:
                 risks_collection = client.get_or_create_collection("project_risks")
