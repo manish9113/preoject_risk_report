@@ -7,7 +7,8 @@ from typing import Dict, List, Any, Optional, Union
 from config import (
     RISK_CATEGORIES, 
     RISK_LEVELS, 
-    DEFAULT_PROJECTS, 
+    DEFAULT_PROJECTS,
+    OLLAMA_MODEL,
     VECTOR_DB_TYPE,
     CHROMA_PERSIST_DIRECTORY
 )
@@ -29,8 +30,11 @@ def generate_mock_risk(project_name: str, date: datetime) -> Dict[str, Any]:
         RISK_LEVELS[level]["threshold"]
     )
     
+    # Generate a more unique ID using timestamp to avoid duplicates
+    unique_id = f"RISK-{int(datetime.now().timestamp() * 1000)}-{random.randint(1000, 9999)}"
+    
     return {
-        "id": f"RISK-{random.randint(1000, 9999)}",
+        "id": unique_id,
         "title": f"{category} {random.choice(risk_titles)}",
         "description": f"This is a {level.lower()}-level risk related to {category.lower()} for {project_name}.",
         "category": category,
@@ -295,10 +299,10 @@ def initialize_vector_db():
                 }
             except Exception as e:
                 print(f"Error creating ChromaDB collections: {str(e)}")
-                return None
+                return {}
         except ImportError:
             print("ChromaDB not installed. Please install it with 'pip install chromadb'")
-            return None
+            return {}
     elif VECTOR_DB_TYPE == "pinecone":
         try:
             import pinecone
@@ -315,10 +319,10 @@ def initialize_vector_db():
             }
         except ImportError:
             print("Pinecone not installed. Please install it with 'pip install pinecone-client'")
-            return None
+            return {}
     else:
         print(f"Unsupported vector database type: {VECTOR_DB_TYPE}")
-        return None
+        return {}
 
 def store_risk_data_in_vector_db(risks: List[Dict[str, Any]]) -> bool:
     """

@@ -553,6 +553,19 @@ wheels = [
 ]
 
 [[package]]
+name = "dataclasses-json"
+version = "0.6.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "marshmallow" },
+    { name = "typing-inspect" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/64/a4/f71d9cf3a5ac257c993b5ca3f93df5f7fb395c725e7f1e6479d2514173c3/dataclasses_json-0.6.7.tar.gz", hash = "sha256:b6b3e528266ea45b9535223bc53ca645f5208833c29229e847b3f26a1cc55fc0", size = 32227 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c3/be/d0d44e092656fe7a06b55e6103cbce807cdbdee17884a5367c68c9860853/dataclasses_json-0.6.7-py3-none-any.whl", hash = "sha256:0dbf33f26c8d5305befd61b39d2b3414e8a407bedc2834dea9b8d642666fb40a", size = 28686 },
+]
+
+[[package]]
 name = "decorator"
 version = "5.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -911,6 +924,15 @@ wheels = [
 ]
 
 [[package]]
+name = "httpx-sse"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4c/60/8f4281fa9bbf3c8034fd54c0e7412e66edbab6bc74c4996bd616f8d0406e/httpx-sse-0.4.0.tar.gz", hash = "sha256:1e81a3a3070ce322add1d3529ed42eb5f70817f45ed6ec915ab753f961139721", size = 12624 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e1/9b/a181f281f65d776426002f330c31849b86b31fc9d848db62e16f03ff739f/httpx_sse-0.4.0-py3-none-any.whl", hash = "sha256:f329af6eae57eaa2bdfd962b42524764af68075ea87370a2de920af5341e318f", size = 7819 },
+]
+
+[[package]]
 name = "huggingface-hub"
 version = "0.30.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1222,6 +1244,29 @@ wheels = [
 ]
 
 [[package]]
+name = "langchain-community"
+version = "0.3.21"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "dataclasses-json" },
+    { name = "httpx-sse" },
+    { name = "langchain" },
+    { name = "langchain-core" },
+    { name = "langsmith" },
+    { name = "numpy" },
+    { name = "pydantic-settings" },
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "sqlalchemy" },
+    { name = "tenacity" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d8/be/5288a737069570741d46390028b4e8518354329345294ca89fcb2d44a9c1/langchain_community-0.3.21.tar.gz", hash = "sha256:b87b9992cbeea7553ed93e3d39faf9893a8690318485f7dc861751c7878729f7", size = 33226597 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bb/72/4046a132a180b569265bc8aa7ecd6f958f6c11085bdf68c7e1bbe52f1907/langchain_community-0.3.21-py3-none-any.whl", hash = "sha256:8cb9bbb7ef15e5eea776193528dd0e0e1299047146d0c78b6c696ae2dc62e81f", size = 2526687 },
+]
+
+[[package]]
 name = "langchain-core"
 version = "0.3.51"
 source = { registry = "https://pypi.org/simple" }
@@ -1363,6 +1408,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/0d/80/0985960e4b89922cb5a0bac0ed39c5b96cbc1a536a99f30e8c220a996ed9/MarkupSafe-3.0.2-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:131a3c7689c85f5ad20f9f6fb1b866f402c445b220c19fe4308c0b147ccd2ad9", size = 24098 },
     { url = "https://files.pythonhosted.org/packages/82/78/fedb03c7d5380df2427038ec8d973587e90561b2d90cd472ce9254cf348b/MarkupSafe-3.0.2-cp313-cp313t-win32.whl", hash = "sha256:ba8062ed2cf21c07a9e295d5b8a2a5ce678b913b45fdf68c32d95d6c1291e0b6", size = 15208 },
     { url = "https://files.pythonhosted.org/packages/4f/65/6079a46068dfceaeabb5dcad6d674f5f5c61a6fa5673746f42a9f4c233b3/MarkupSafe-3.0.2-cp313-cp313t-win_amd64.whl", hash = "sha256:e444a31f8db13eb18ada366ab3cf45fd4b31e4db1236a4448f68778c1d1a5a2f", size = 15739 },
+]
+
+[[package]]
+name = "marshmallow"
+version = "3.26.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ab/5e/5e53d26b42ab75491cda89b871dab9e97c840bf12c63ec58a1919710cd06/marshmallow-3.26.1.tar.gz", hash = "sha256:e6d8affb6cb61d39d26402096dc0aee12d5a26d490a121f118d2e81dc0719dc6", size = 221825 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/34/75/51952c7b2d3873b44a0028b1bd26a25078c18f92f256608e8d1dc61b39fd/marshmallow-3.26.1-py3-none-any.whl", hash = "sha256:3350409f20a70a7e4e11a27661187b77cdcaeb20abca41c1454fe33636bea09c", size = 50878 },
 ]
 
 [[package]]
@@ -1535,6 +1592,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/b9/3b/1599631f59024b75c4d6e3069f4502409970a336647502aaf6b62fb7ac98/multidict-6.4.3-cp313-cp313t-win32.whl", hash = "sha256:0ecdc12ea44bab2807d6b4a7e5eef25109ab1c82a8240d86d3c1fc9f3b72efd5", size = 41775 },
     { url = "https://files.pythonhosted.org/packages/e8/4e/09301668d675d02ca8e8e1a3e6be046619e30403f5ada2ed5b080ae28d02/multidict-6.4.3-cp313-cp313t-win_amd64.whl", hash = "sha256:7146a8742ea71b5d7d955bffcef58a9e6e04efba704b52a460134fefd10a8208", size = 45946 },
     { url = "https://files.pythonhosted.org/packages/96/10/7d526c8974f017f1e7ca584c71ee62a638e9334d8d33f27d7cdfc9ae79e4/multidict-6.4.3-py3-none-any.whl", hash = "sha256:59fe01ee8e2a1e8ceb3f6dbb216b09c8d9f4ef1c22c4fc825d045a147fa2ebc9", size = 10400 },
+]
+
+[[package]]
+name = "mypy-extensions"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/98/a4/1ab47638b92648243faf97a5aeb6ea83059cc3624972ab6b8d2316078d3f/mypy_extensions-1.0.0.tar.gz", hash = "sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782", size = 4433 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2a/e2/5d3f6ada4297caebe1a2add3b126fe800c96f56dbe5d1988a2cbe0b267aa/mypy_extensions-1.0.0-py3-none-any.whl", hash = "sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d", size = 4695 },
 ]
 
 [[package]]
@@ -2034,6 +2100,31 @@ wheels = [
 ]
 
 [[package]]
+name = "pinecone-client"
+version = "6.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "pinecone-plugin-interface" },
+    { name = "python-dateutil" },
+    { name = "typing-extensions" },
+    { name = "urllib3", marker = "python_full_version < '4.0'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6c/ab/3ab3b81e8ad82fbfcaa4f446c7f962b18968d61543c8c9e2c38bd777c056/pinecone_client-6.0.0.tar.gz", hash = "sha256:f224fc999205e4858c4737c40922bdf42d178b361c8859bc486ec00d45b359a9", size = 7004 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5a/e4/7780cd631dc6dad0172a245e958b41b28a70779594c0790fa08b952aa97f/pinecone_client-6.0.0-py3-none-any.whl", hash = "sha256:d81a9e73cae441e4ab6dfc9c1d8b51c9895dae2488cda64f3e21b9dfc10c8d94", size = 6654 },
+]
+
+[[package]]
+name = "pinecone-plugin-interface"
+version = "0.0.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f4/fb/e8a4063264953ead9e2b24d9b390152c60f042c951c47f4592e9996e57ff/pinecone_plugin_interface-0.0.7.tar.gz", hash = "sha256:b8e6675e41847333aa13923cc44daa3f85676d7157324682dc1640588a982846", size = 3370 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3b/1d/a21fdfcd6d022cb64cef5c2a29ee6691c6c103c4566b41646b080b7536a5/pinecone_plugin_interface-0.0.7-py3-none-any.whl", hash = "sha256:875857ad9c9fc8bbc074dbe780d187a2afd21f5bfe0f3b08601924a61ef1bba8", size = 6249 },
+]
+
+[[package]]
 name = "plotly"
 version = "6.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2326,6 +2417,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pydantic-settings"
+version = "2.8.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/88/82/c79424d7d8c29b994fb01d277da57b0a9b09cc03c3ff875f9bd8a86b2145/pydantic_settings-2.8.1.tar.gz", hash = "sha256:d5c663dfbe9db9d5e1c646b2e161da12f0d734d422ee56f567d0ea2cee4e8585", size = 83550 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0b/53/a64f03044927dc47aafe029c42a5b7aabc38dfb813475e0e1bf71c4a59d0/pydantic_settings-2.8.1-py3-none-any.whl", hash = "sha256:81942d5ac3d905f7f3ee1a70df5dfb62d5569c12f51a5a647defc1c3d9ee2e9c", size = 30839 },
+]
+
+[[package]]
 name = "pydeck"
 version = "0.9.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2554,10 +2658,12 @@ dependencies = [
     { name = "chromadb" },
     { name = "crewai" },
     { name = "langchain" },
+    { name = "langchain-community" },
     { name = "langchain-core" },
     { name = "langchain-openai" },
     { name = "openai" },
     { name = "pandas" },
+    { name = "pinecone-client" },
     { name = "plotly" },
     { name = "pydantic" },
     { name = "requests" },
@@ -2569,10 +2675,12 @@ requires-dist = [
     { name = "chromadb", specifier = ">=1.0.4" },
     { name = "crewai", specifier = ">=0.114.0" },
     { name = "langchain", specifier = ">=0.3.23" },
+    { name = "langchain-community", specifier = ">=0.3.21" },
     { name = "langchain-core", specifier = ">=0.3.51" },
     { name = "langchain-openai", specifier = ">=0.3.12" },
     { name = "openai", specifier = ">=1.72.0" },
     { name = "pandas", specifier = ">=2.2.3" },
+    { name = "pinecone-client", specifier = ">=6.0.0" },
     { name = "plotly", specifier = ">=6.0.1" },
     { name = "pydantic", specifier = ">=2.11.3" },
     { name = "requests", specifier = ">=2.32.3" },
@@ -3037,6 +3145,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f6/37/23083fcd6e35492953e8d2aaaa68b860eb422b34627b13f2ce3eb6106061/typing_extensions-4.13.2.tar.gz", hash = "sha256:e6c81219bd689f51865d9e372991c540bda33a0379d5573cddb9a3a23f7caaef", size = 106967 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8b/54/b1ae86c0973cc6f0210b53d508ca3641fb6d0c56823f288d108bc7ab3cc8/typing_extensions-4.13.2-py3-none-any.whl", hash = "sha256:a439e7c04b49fec3e5d3e2beaa21755cadbbdc391694e28ccdd36ca4a1408f8c", size = 45806 },
+]
+
+[[package]]
+name = "typing-inspect"
+version = "0.9.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "mypy-extensions" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/dc/74/1789779d91f1961fa9438e9a8710cdae6bd138c80d7303996933d117264a/typing_inspect-0.9.0.tar.gz", hash = "sha256:b23fc42ff6f6ef6954e4852c1fb512cdd18dbea03134f91f856a95ccc9461f78", size = 13825 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl", hash = "sha256:9ee6fc59062311ef8547596ab6b955e1b8aa46242d854bfc78f4f6b0eff35f9f", size = 8827 },
 ]
 
 [[package]]

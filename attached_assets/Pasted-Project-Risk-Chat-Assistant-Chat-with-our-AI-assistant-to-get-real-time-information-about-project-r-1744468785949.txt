@@ -1,0 +1,20 @@
+Project Risk Chat Assistant
+Chat with our AI assistant to get real-time information about project risks, status updates, and mitigation strategies. Ask questions like:
+
+What are the top risks for Project X?
+How has the risk profile changed in the last week?
+What mitigation strategies do you recommend for resource shortages?
+Compare risks between Project A and Project B
+👋 Welcome to the AI Project Risk Management System! I can help you identify, assess, and mitigate risks across your IT projects. How can I assist you today?
+
+What are the top risks for Project X?
+
+I encountered an error while analyzing your request: 2 validation errors for Task context.0.description Field required [type=missing, input_value={'role': 'user', 'content... 'E-commerce Platform'"}, input_type=dict] For further information visit https://errors.pydantic.dev/2.11/v/missing context.0.expected_output Field required [type=missing, input_value={'role': 'user', 'content... 'E-commerce Platform'"}, input_type=dict] For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+What are the top risks for E-commerce Platform
+
+I encountered an error while analyzing your request: 2 validation errors for Task context.0.description Field required [type=missing, input_value={'role': 'user', 'content... 'E-commerce Platform'"}, input_type=dict] For further information visit https://errors.pydantic.dev/2.11/v/missing context.0.expected_output Field required [type=missing, input_value={'role': 'user', 'content... 'E-commerce Platform'"}, input_type=dict] For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+How has the risk profile changed in the last week
+
+I encountered an error while analyzing your request: litellm.RateLimitError: RateLimitError: OpenAIException - Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
