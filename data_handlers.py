@@ -319,3 +319,170 @@ def initialize_vector_db():
     else:
         print(f"Unsupported vector database type: {VECTOR_DB_TYPE}")
         return None
+
+def store_risk_data_in_vector_db(risks: List[Dict[str, Any]]) -> bool:
+    """
+    Store risk data in the vector database.
+    
+    Args:
+        risks: List of risk dictionaries to store
+        
+    Returns:
+        Boolean indicating success or failure
+    """
+    try:
+        vector_db = initialize_vector_db()
+        if not vector_db:
+            print("Failed to initialize vector database")
+            return False
+            
+        if VECTOR_DB_TYPE == "chromadb":
+            collection = vector_db["collections"]["risks"]
+            
+            # Prepare data for ChromaDB
+            ids = [risk["id"] for risk in risks]
+            documents = [json.dumps(risk) for risk in risks]
+            metadata = [{
+                "project": risk.get("project", "Unknown"),
+                "category": risk.get("category", "Unknown"),
+                "level": risk.get("level", "Unknown"),
+                "score": str(risk.get("score", 0))
+            } for risk in risks]
+            
+            # Add data to collection
+            collection.add(
+                ids=ids,
+                documents=documents,
+                metadatas=metadata
+            )
+            return True
+            
+        elif VECTOR_DB_TYPE == "pinecone":
+            index = vector_db["index"]
+            
+            # Prepare vectors for Pinecone
+            # In a real implementation, you would use an embedding model here
+            # For demo purposes, we'll use a simplified approach
+            vectors = []
+            from langchain_openai import OpenAIEmbeddings
+            embeddings = OpenAIEmbeddings()
+            
+            for risk in risks:
+                risk_text = f"{risk.get('title', '')} {risk.get('description', '')}"
+                vector = embeddings.embed_query(risk_text)
+                vectors.append({
+                    "id": risk["id"],
+                    "values": vector,
+                    "metadata": {
+                        "project": risk.get("project", "Unknown"),
+                        "category": risk.get("category", "Unknown"),
+                        "level": risk.get("level", "Unknown"),
+                        "score": risk.get("score", 0),
+                        "data": json.dumps(risk)
+                    }
+                })
+            
+            # Upsert vectors to Pinecone
+            index.upsert(vectors=vectors)
+            return True
+    except Exception as e:
+        print(f"Error storing risk data in vector database: {str(e)}")
+        return False
+
+def query_risks_from_vector_db(query: str, project: str = None, limit: int = 10) -> List[Dict[str, Any]]:
+    """
+    Query risks from the vector database based on semantic similarity.
+    
+    Args:
+        query: The natural language query
+        project: Optional project name to filter by
+        limit: Maximum number of results to return
+        
+    Returns:
+        List of risk dictionaries matching the query
+    """
+    try:
+        vector_db = initialize_vector_db()
+        if not vector_db:
+            print("Failed to initialize vector database")
+            return []
+            
+        if VECTOR_DB_TYPE == "chromadb":
+            collection = vector_db["collections"]["risks"]
+            
+            # Prepare filter if project is specified
+            where_filter = {"project": project} if project and project != "All Projects" else None
+            
+            # Query the collection
+            results = collection.query(
+                query_texts=[query],
+                n_results=limit,
+                where=where_filter
+            )
+            
+            # Parse results
+            risks = []
+            if results and "documents" in results and len(results["documents"]) > 0:
+                for document in results["documents"][0]:
+                    try:
+                        risk = json.loads(document)
+                        risks.append(risk)
+                    except json.JSONDecodeError:
+                        continue
+            
+            return risks
+            
+        elif VECTOR_DB_TYPE == "pinecone":
+            index = vector_db["index"]
+            
+            # Generate query embedding
+            from langchain_openai import OpenAIEmbeddings
+            embeddings = OpenAIEmbeddings()
+            query_embedding = embeddings.embed_query(query)
+            
+            # Prepare filter if project is specified
+            filter_dict = {"project": {"$eq": project}} if project and project != "All Projects" else None
+            
+            # Query Pinecone
+            query_response = index.query(
+                vector=query_embedding,
+                top_k=limit,
+                filter=filter_dict,
+                include_metadata=True
+            )
+            
+            # Parse results
+            risks = []
+            for match in query_response.matches:
+                try:
+                    risk = json.loads(match.metadata.get("data", "{}"))
+                    risks.append(risk)
+                except json.JSONDecodeError:
+                    continue
+            
+            return risks
+    except Exception as e:
+        print(f"Error querying risks from vector database: {str(e)}")
+        return []
+
+def populate_vector_db_with_sample_data():
+    """
+    Populate the vector database with sample risk data.
+    This is for demonstration purposes only.
+    """
+    # Generate sample risk data for all projects
+    all_risks = []
+    
+    for project in DEFAULT_PROJECTS:
+        dates = [datetime.now() - timedelta(days=i) for i in range(30)]
+        
+        for date in dates:
+            num_risks = random.randint(1, 3)
+            for _ in range(num_risks):
+                risk = generate_mock_risk(project, date)
+                # Add project name to risk data
+                risk["project"] = project
+                all_risks.append(risk)
+    
+    # Store data in vector DB
+    return store_risk_data_in_vector_db(all_risks)

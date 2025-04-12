@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import random
 from pydantic import BaseModel, Field
 from langchain_core.callbacks.manager import CallbackManagerForToolRun
-from data_handlers import get_project_data
+from data_handlers import get_project_data, query_risks_from_vector_db
 from config import RISK_LEVELS, RISK_CATEGORIES, DEFAULT_PROJECTS
 
 class ProjectDataInput(BaseModel):
@@ -190,6 +190,41 @@ class ProjectComparisonTool(BaseTool):
         except Exception as e:
             return f"Error comparing projects: {str(e)}"
 
+class RiskSearchInput(BaseModel):
+    query: str = Field(description="The semantic search query to find relevant risks")
+    project_name: str = Field(description="The name of the project to search risks for, or 'All Projects' for all projects")
+    limit: int = Field(default=10, description="Maximum number of results to return")
+
+class SemanticRiskSearchTool(BaseTool):
+    """Tool for semantically searching project risks using vector database."""
+    name = "semantic_risk_search_tool"
+    description = """
+    Use this tool to semantically search for risks across projects based on natural language queries.
+    This tool uses a vector database to find risks that are semantically similar to the query.
+    """
+    args_schema = RiskSearchInput
+    
+    def _run(self, query: str, project_name: str, limit: int = 10, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
+        """Search for risks matching the semantic query."""
+        try:
+            # Query the vector database
+            project = None if project_name == "All Projects" else project_name
+            results = query_risks_from_vector_db(query, project, limit)
+            
+            if not results:
+                return f"No risks found matching the query: '{query}' for project '{project_name}'."
+            
+            search_results = {
+                "query": query,
+                "project": project_name,
+                "total_results": len(results),
+                "risks": results
+            }
+            
+            return json.dumps(search_results, indent=2)
+        except Exception as e:
+            return f"Error searching for risks: {str(e)}"
+
 # Get all available tools
 def get_tools() -> List[BaseTool]:
     """Return a list of all available tools."""
@@ -198,5 +233,6 @@ def get_tools() -> List[BaseTool]:
         RiskAnalysisTool(),
         MarketAnalysisTool(),
         MitigationStrategiesTool(),
-        ProjectComparisonTool()
+        ProjectComparisonTool(),
+        SemanticRiskSearchTool()
     ]

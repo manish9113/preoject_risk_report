@@ -6,9 +6,16 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
 from agents import initialize_crew, get_project_risk_assessment
-from config import RISK_LEVELS, RISK_CATEGORIES, DEFAULT_PROJECTS
+from config import RISK_LEVELS, RISK_CATEGORIES, DEFAULT_PROJECTS, VECTOR_DB_TYPE
 from utils import format_chat_history, generate_risk_report_summary
-from data_handlers import get_project_data, load_chat_history, save_chat_history
+from data_handlers import (
+    get_project_data, 
+    load_chat_history, 
+    save_chat_history, 
+    initialize_vector_db,
+    populate_vector_db_with_sample_data,
+    query_risks_from_vector_db
+)
 
 # Set page configuration
 st.set_page_config(
@@ -29,6 +36,14 @@ if "crew" not in st.session_state:
     except Exception as e:
         st.error(f"Error initializing AI agents: {str(e)}")
         st.session_state.crew = None
+if "vector_db" not in st.session_state:
+    st.session_state.vector_db = initialize_vector_db()
+    if not st.session_state.vector_db:
+        st.warning(f"Vector database ({VECTOR_DB_TYPE}) initialization failed. Some search functionality may be limited.")
+    else:
+        # Populate with sample data only if newly initialized
+        with st.spinner("Initializing risk database..."):
+            populate_vector_db_with_sample_data()
 
 # Main title and introduction
 st.title("🔍 AI-Powered Project Risk Management System")
@@ -138,9 +153,33 @@ with tab1:
 with tab2:
     st.header(f"Risk Analysis: {selected_project}")
     
+    # Add semantic search function
+    st.subheader("Risk Search")
+    search_col1, search_col2 = st.columns([3, 1])
+    with search_col1:
+        search_query = st.text_input("Search risks by description or category", placeholder="e.g., resource shortage, security vulnerability")
+    with search_col2:
+        search_button = st.button("Search", type="primary", key="search_risks_button")
+    
     try:
         # Get project risks
         project_risks = project_data["risks"]
+        
+        # If a search query was entered
+        if search_query and search_button:
+            with st.spinner("Searching risks database..."):
+                # Search risks in vector DB
+                if st.session_state.vector_db:
+                    vector_results = query_risks_from_vector_db(
+                        search_query, 
+                        project=selected_project if selected_project != "All Projects" else None,
+                        limit=10
+                    )
+                    if vector_results:
+                        st.success(f"Found {len(vector_results)} matching risks")
+                        project_risks = vector_results
+                    else:
+                        st.info("No matching risks found in the database. Showing all risks instead.")
         
         # Filter risks based on sidebar selections
         filtered_risks = [
@@ -197,7 +236,7 @@ with tab2:
             st.markdown(report_summary)
             
             # Export options
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             with col1:
                 st.download_button(
                     "Download Risk Report (CSV)",
@@ -208,6 +247,9 @@ with tab2:
             with col2:
                 if st.button("Generate Detailed PDF Report"):
                     st.info("PDF report generation would be implemented here")
+            with col3:
+                vector_db_type = "ChromaDB" if VECTOR_DB_TYPE == "chromadb" else "Pinecone"
+                st.info(f"Risk data stored in {vector_db_type}")
         
     except Exception as e:
         st.error(f"Error loading risk analysis: {str(e)}")
