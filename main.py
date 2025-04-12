@@ -144,7 +144,7 @@ with tab1:
             labels={"category": "Risk Category", "count": "Number of Risks"},
             color_discrete_map={"Low": "#26eb77", "Medium": "#f0cc45", "High": "#eb4034"}
         )
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, use_container_width=True, key="category_chart")
         
     except Exception as e:
         st.error(f"Error loading dashboard data: {str(e)}")
@@ -228,7 +228,7 @@ with tab2:
                             }
                         ))
                         fig.update_layout(height=250, margin=dict(l=10, r=10, t=50, b=10))
-                        st.plotly_chart(fig, use_container_width=True)
+                        st.plotly_chart(fig, use_container_width=True, key=f"risk_gauge_{i}")
             
             # Risk report summary
             st.subheader("Risk Report Summary")

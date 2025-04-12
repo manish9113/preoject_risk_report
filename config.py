@@ -6,7 +6,7 @@ OLLAMA_MODEL = "llama3"  # or another model you prefer to use
 OLLAMA_BASE_URL = "http://localhost:11434"
 
 # Vector Database Configuration
-VECTOR_DB_TYPE = "chromadb"  # "chromadb" or "pinecone"
+VECTOR_DB_TYPE = "none"  # "chromadb", "pinecone", or "none" to disable
 CHROMA_PERSIST_DIRECTORY = "chroma_db"
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_ENVIRONMENT = os.getenv("PINECONE_ENVIRONMENT", "us-west1-gcp")

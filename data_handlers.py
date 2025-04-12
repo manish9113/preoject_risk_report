@@ -280,7 +280,10 @@ def save_chat_history(chat_history: List[Dict[str, str]]) -> None:
 
 def initialize_vector_db():
     """Initialize and return the vector database connection."""
-    if VECTOR_DB_TYPE == "chromadb":
+    if VECTOR_DB_TYPE == "none":
+        print("Vector database functionality is disabled")
+        return {"disabled": True}
+    elif VECTOR_DB_TYPE == "chromadb":
         try:
             import chromadb
             from chromadb.config import Settings
@@ -303,10 +306,10 @@ def initialize_vector_db():
                 }
             except Exception as e:
                 print(f"Error creating ChromaDB collections: {str(e)}")
-                return {}
+                return {"disabled": True}
         except ImportError:
             print("ChromaDB not installed. Please install it with 'pip install chromadb'")
-            return {}
+            return {"disabled": True}
     elif VECTOR_DB_TYPE == "pinecone":
         try:
             import pinecone
@@ -323,10 +326,10 @@ def initialize_vector_db():
             }
         except ImportError:
             print("Pinecone not installed. Please install it with 'pip install pinecone-client'")
-            return {}
+            return {"disabled": True}
     else:
         print(f"Unsupported vector database type: {VECTOR_DB_TYPE}")
-        return {}
+        return {"disabled": True}
 
 def store_risk_data_in_vector_db(risks: List[Dict[str, Any]]) -> bool:
     """
@@ -343,6 +346,11 @@ def store_risk_data_in_vector_db(risks: List[Dict[str, Any]]) -> bool:
         if not vector_db:
             print("Failed to initialize vector database")
             return False
+            
+        # Check if vector database is disabled
+        if "disabled" in vector_db and vector_db["disabled"]:
+            print("Vector database functionality is disabled")
+            return True
             
         if VECTOR_DB_TYPE == "chromadb":
             collection = vector_db["collections"]["risks"]
@@ -413,6 +421,12 @@ def query_risks_from_vector_db(query: str, project: str = None, limit: int = 10)
         vector_db = initialize_vector_db()
         if not vector_db:
             print("Failed to initialize vector database")
+            return []
+            
+        # Check if vector database is disabled
+        if "disabled" in vector_db and vector_db["disabled"]:
+            print("Vector database functionality is disabled")
+            # Just return empty results when disabled
             return []
             
         if VECTOR_DB_TYPE == "chromadb":
